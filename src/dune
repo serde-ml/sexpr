@@ -1,0 +1,12 @@
+(library
+ (public_name serde_sexpr)
+ (modules serde_sexpr)
+ (libraries serde rio sedlex)
+ (preprocess
+  (pps sedlex.ppx)))
+
+(test
+ (package serde_sexpr)
+ (name serde_sexpr_test)
+ (modules serde_sexpr_test)
+ (libraries serde_sexpr serde qcheck spices))

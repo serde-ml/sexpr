@@ -1,0 +1,3 @@
+profile = default
+let-binding-spacing=double-semicolon
+break-infix=fit-or-vertical
