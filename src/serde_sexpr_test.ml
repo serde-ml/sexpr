@@ -1,7 +1,4 @@
-[@@@warning "-32-37"]
-
 open Serde
-open Serde_sexpr
 
 let keyword fmt = Spices.(default |> fg (color "#00FF00") |> build) fmt
 let error fmt = Spices.(default |> fg (color "#FF0000") |> build) fmt
@@ -18,6 +15,9 @@ type with_option = string option
 type with_nested_option = { nested_opt : with_option }
 type with_list = string list
 type with_array = string array
+
+type with_type_field = { type_ : string [@serde { rename = "type" }] }
+[@@deriving serialize, deserialize]
 
 let pp_variant fmt A = Format.fprintf fmt "A"
 let pp_variant_with_arg fmt (B i) = Format.fprintf fmt "(B %d)" i
@@ -66,12 +66,14 @@ let pp_with_array fmt (t : with_array) =
   Format.fprintf fmt "|]"
 ;;
 
+let pp_with_type_field fmt { type_ } = Format.fprintf fmt "{type=%S}" type_
+
 let pp_record_with_list fmt { keys; collection } =
   Format.fprintf fmt "{keys=%a;collection=%S}" pp_with_list keys collection
 ;;
 
 let _serde_sexpr_roundtrip_tests =
-  let test str pp ser de value expect_str =
+  let test test_name pp ser de value expect_str =
     let actual_str =
       match
         let* sexpr = Serde_sexpr.to_string ser value in
@@ -81,11 +83,12 @@ let _serde_sexpr_roundtrip_tests =
       | Ok actual -> Format.asprintf "%a" pp actual
       | Error err -> Format.asprintf "Exception: %a" Serde.pp_err err
     in
-
     if String.equal actual_str expect_str then
-      Format.printf "serde_sexpr.ser/de test %S %s\r\n%!" str (keyword "OK")
+      Format.printf "serde_sexpr.ser/de test %S %s\r\n%!" test_name
+        (keyword "OK")
     else (
-      Format.printf "%s\n\nExpected:\n\n%s\n\nbut found:\n\n%s\n\n"
+      Format.printf "Test %s: \n%s\n\nExpected:\n\n%s\n\nbut found:\n\n%s\n\n"
+        test_name
         (error "sexpr does not match")
         expect_str actual_str;
       assert false)
@@ -123,7 +126,6 @@ let _serde_sexpr_roundtrip_tests =
                 match str with "A" -> Ok `A | _ -> Error `invalid_tag);
           }
       in
-
       variant ctx "simple_variant" [ "A" ] @@ fun ctx ->
       let* `A = identifier ctx field_visitor in
       let* () = unit_variant ctx in
@@ -267,7 +269,6 @@ let _serde_sexpr_roundtrip_tests =
                 match str with "C" -> Ok `C | _ -> Error `invalid_tag);
           }
       in
-
       variant ctx "variant_with_many_args" [ "C" ] @@ fun ctx ->
       let* `C = identifier ctx constructor_visitor in
       record_variant ctx 2 @@ fun ~size:_ ctx ->
@@ -491,5 +492,51 @@ let _serde_sexpr_roundtrip_tests =
     deserialize_record_with_list
     { keys = []; collection = "bands" }
     {|{keys=[];collection="bands"}|};
+
+  test "record_with_key_rename" pp_with_type_field serialize_with_type_field
+    deserialize_with_type_field { type_ = "hello" } {|{type="hello"}|};
   ()
+;;
+
+type hello = { hello : string; count : int option }
+[@@deriving serialize, deserialize]
+
+let _serde_sexpr_parse_test_no_key =
+  let str = {|(("hello" "world") ("count" 1))|} in
+  let str1 = {|((hello world))|} in
+  let str2 = {|((hello world) (count 1))|} in
+  let cases = [ str; str1; str2 ] in
+  let test str =
+    let parsed = Serde_sexpr.of_string deserialize_hello str in
+    match parsed with
+    | Ok _ ->
+        Format.printf "serde_sexpr.ser/de test %S %s\r\n%!" "parsed with no key"
+          (keyword "OK")
+    | Error err ->
+        let err_str = Format.asprintf "Exception: %a" Serde.pp_err err in
+        Format.printf "serde_sexpr.ser/de test %S %s\r\n%s %!"
+          "parsed with no key" (error "Failed!") err_str;
+        assert false
+  in
+  List.iter test cases
+;;
+
+type with_default = {
+  greeting : string;
+  count_with_default : int; [@serde { default = 5 }]
+}
+[@@deriving serialize, deserialize]
+
+let _serde_sexpr_parse_test_with_default =
+  let str = {| (("greeting" "yoyo")) |} in
+  let str1 = {| ((greeting yoyo)) |} in
+  let cases = [ str; str1 ] in
+  let test str =
+    let parsed = Serde_sexpr.of_string deserialize_with_default str in
+    let parsed = Result.get_ok parsed in
+    assert (parsed.count_with_default = 5);
+    Format.printf "serde_sexpr.ser/de test %S %s\r\n%!" "parsed with default"
+      (keyword "OK")
+  in
+  List.iter test cases
 ;;

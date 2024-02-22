@@ -9,4 +9,6 @@
  (package serde_sexpr)
  (name serde_sexpr_test)
  (modules serde_sexpr_test)
- (libraries serde_sexpr serde qcheck spices))
+ (libraries serde_sexpr serde qcheck spices)
+ (preprocess
+  (pps serde_derive)))
