@@ -407,14 +407,14 @@ module Deserializer = struct
   let deserialize_record_variant self { reader = _; _ } ~size de =
     De.deserialize_record self "" size (de ~size)
 
-  let deserialize_variant self { reader; _ } visitor ~name:_ ~variants:_ =
+  let deserialize_variant self { reader; _ } de ~name ~variants =
     match Parser.peek reader with
     | Some "(" ->
         let* () = Parser.read_lparen reader in
-        let* value = Visitor.visit_variant self visitor in
+        let* value = De.deserialize_variant self ~de ~name ~variants in
         let* () = Parser.read_rparen reader in
         Ok value
-    | Some "\"" -> Visitor.visit_variant self visitor
+    | Some "\"" -> De.deserialize_variant self ~de ~name ~variants
     | _ -> assert false
 
   (** Deserializes a record
@@ -453,6 +453,9 @@ module Deserializer = struct
     let value = De.deserialize self de in
     let* () = Parser.read_rparen state.reader in
     value
+
+  let deserialize_ignored_any _self _s =
+    failwith "unexpect ignored_any"
 end
 
 let to_string ser value =
