@@ -10,8 +10,7 @@
     };
 
     serde = {
-      # url = "github:serde-ml/serde";
-      url = "/Users/me/oss/serde.ml/serde";
+      url = "github:serde-ml/serde";
       inputs.minttea.follows = "minttea";
       inputs.nixpkgs.follows = "nixpkgs";
     };
@@ -29,10 +28,18 @@
           {
             devShells = {
               default = mkShell {
-                buildInputs = [ ocamlPackages.utop ];
+                buildInputs = with ocamlPackages; [
+                  dune_3
+                  ocaml
+                  utop
+                  ocamlformat
+                ];
                 inputsFrom = [
                   self'.packages.default
                 ];
+                packages = builtins.attrValues {
+                  inherit (ocamlPackages) ocaml-lsp ocamlformat-rpc-lib;
+                };
               };
             };
 
