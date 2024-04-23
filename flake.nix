@@ -29,6 +29,7 @@
             devShells = {
               default = mkShell {
                 buildInputs = with ocamlPackages; [
+                  dune-release
                   dune_3
                   ocaml
                   utop
