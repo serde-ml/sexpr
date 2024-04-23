@@ -1,4 +1,4 @@
-(lang dune 3.14)
+(lang dune 3.12)
 (cram enable)
 
 (name serde_sexpr)
@@ -19,9 +19,9 @@
   (synopsis "S-expression format support for Serde")
   (depends
     (ocaml (>= "4.14.0"))
-    (serde (>= "0.0.1"))
-    (serde_derive (>= "0.0.1"))
-    (spices (>= "0.0.2"))
-    (ppx_inline_test (>= "v0.16.0"))
+    (serde (>= "0.0.2"))
+    (serde_derive (and :with-test (>= "0.0.2")))
+    (spices (and :with-test (>= "0.0.2")))
+    (ppx_inline_test (and :with-test (>= "v0.16.0")))
     (sedlex (= 3.2))
     ))

@@ -77,7 +77,6 @@ let _serde_sexpr_roundtrip_tests =
     let actual_str =
       match
         let* sexpr = Serde_sexpr.to_string ser value in
-        Printf.printf "sexpr: %S\n%!" sexpr;
         Serde_sexpr.of_string de sexpr
       with
       | Ok actual -> Format.asprintf "%a" pp actual

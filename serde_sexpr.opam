@@ -10,12 +10,12 @@ license: "MIT"
 homepage: "https://github.com/serde-ml/sexpr"
 bug-reports: "https://github.com/serde-ml/sexpr/issues"
 depends: [
-  "dune" {>= "3.14"}
+  "dune" {>= "3.12"}
   "ocaml" {>= "4.14.0"}
-  "serde" {>= "0.0.1"}
-  "serde_derive" {>= "0.0.1"}
-  "spices" {>= "0.0.2"}
-  "ppx_inline_test" {>= "v0.16.0"}
+  "serde" {>= "0.0.2"}
+  "serde_derive" {with-test & >= "0.0.2"}
+  "spices" {with-test & >= "0.0.2"}
+  "ppx_inline_test" {with-test & >= "v0.16.0"}
   "sedlex" {= "3.2"}
   "odoc" {with-doc}
 ]
